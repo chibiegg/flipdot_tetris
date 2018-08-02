@@ -56,6 +56,7 @@ boolean disp[TETRIS_WIDTH][TETRIS_HEIGHT];
 boolean lib[10][5][7];
 
 uint8_t updated = 0;
+uint8_t paused = 0;
 
 
 void tetris_setup() {
@@ -224,7 +225,7 @@ lib[9][2][6] = 1;
 
 void tetris_loop() {
   
-  if (delays < millis())
+  if (delays < millis() && !paused)
    {
      delays = millis() + delay_;
      movedown();
@@ -243,6 +244,13 @@ void tetris_loop() {
     moveleft();
   if (button == 4) //down=movedown
     movedown();
+  if (button == 10) // pause=togglepause
+    togglepause();
+}
+
+void togglepause()
+{
+  paused = !paused;
 }
 
 boolean moveleft()
@@ -340,6 +348,13 @@ int readBut()
     bdelay = millis() + buttondelay;
     return 1;
   }  
+
+  if (c == 'p')
+  {
+    //pause
+    bdelay = millis() + buttondelay;
+    return 10;
+  }
   
   return 0;
 }
