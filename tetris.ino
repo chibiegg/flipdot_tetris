@@ -30,8 +30,8 @@ Comment:
 */
 
 
-#define TETRIS_WIDTH  (7)
-#define TETRIS_HEIGHT (30)
+#define TETRIS_WIDTH  (10)
+#define TETRIS_HEIGHT (21)
 
 unsigned char latchPin = 3;
 unsigned char clockPin = 2;
@@ -1154,13 +1154,15 @@ void RefreshDisplay()
     int k;
     for (k=0;k<TETRIS_HEIGHT;k++)
     {
-      for(i=0;i<=TETRIS_WIDTH;i++)
+      for(i=0;i<TETRIS_WIDTH;i++)
       {
       
         if(disp[i][k]){
-          flipdot.drawPixel(k, 6-i, FLIPDOT_YELLOW);
+          // flipdot.drawPixel(k, 6-i, FLIPDOT_YELLOW);
+          flipdot.drawPixel(i, k, FLIPDOT_YELLOW);
         }else{
-          flipdot.drawPixel(k, 6-i, FLIPDOT_BLACK);
+          // flipdot.drawPixel(k, 6-i, FLIPDOT_BLACK);
+          flipdot.drawPixel(i, k, FLIPDOT_BLACK);
         }
       } 
     }

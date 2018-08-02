@@ -5,7 +5,7 @@
 #define DATA  23//DS
 #define LATCH 19//ST_CP
 
-FlipDot_5x7 flipdot(6, 1, false);
+FlipDot_5x7 flipdot(2, 3, false);
 
 const char* text = "Hello, World!!";
 
