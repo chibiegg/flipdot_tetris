@@ -57,6 +57,7 @@ boolean lib[10][5][7];
 
 uint8_t updated = 0;
 uint8_t paused = 0;
+uint8_t is_gameover = 0;
 
 
 void tetris_setup() {
@@ -219,23 +220,38 @@ lib[9][2][6] = 1;
   randomSeed(seed);  
   random(10,98046);
   
+  tetris_start();
+}
+
+void tetris_start() {
+  lines = 0;
+  is_gameover = 0;
+  memset(block, 0, sizeof(block));
+  memset(pile, 0, sizeof(pile));
+  memset(disp, 0, sizeof(disp));
   newBlock();
   RefreshDisplay();
+  delays = millis() + delay_;
 }
 
 void tetris_loop() {
-  
+
+  //buttun actions
+  int button = readBut();
+
+  if (is_gameover) {
+    if (button == 10 || delays < millis()) {
+      tetris_start();
+    }
+    return;
+  }
+
   if (delays < millis() && !paused)
    {
      delays = millis() + delay_;
      movedown();
    }
    
-   
-
-   //buttun actions
-  int button = readBut();
-  
   if (button == 1) //up=rotate
     rotate();
   if (button == 2) //right=moveright
@@ -274,6 +290,7 @@ boolean moveleft()
     }    
 
     updateLED();
+    RefreshDisplay();
     return 1;
   }
 
@@ -301,6 +318,7 @@ boolean moveright()
     }    
     
    updateLED(); 
+   RefreshDisplay();
    return 1;   
   
   }
@@ -767,6 +785,7 @@ void rotate()
   
   
   updateLED();
+  RefreshDisplay();
 }
 
 void movedown()
@@ -808,6 +827,7 @@ void movedown()
     newBlock();   
   }
   updateLED();  
+  RefreshDisplay();
 }
 
 boolean check_overlap()
@@ -838,7 +858,7 @@ boolean check_overlap()
   return true;
 }
 
-void check_gameover()
+bool check_gameover()
 {
   int i;
   int j;
@@ -862,6 +882,7 @@ void check_gameover()
         pile[j][i]=0;
       }        
       updateLED();
+      RefreshDisplay();
       delay(50);
       
       int k;
@@ -876,22 +897,22 @@ void check_gameover()
       {
         pile[j][0] = 0;
       }        
-      updateLED();      
+      updateLED();    
+      RefreshDisplay();  
       delay(50);      
-      i++;     
-      
-      
-    
+      i++;
     }
   }  
   
   
   for(i=0;i<TETRIS_WIDTH;i++)
   {
-    if (pile[i][0])
+    if (pile[i][0]){
       gameover();
+      return true;
+    }
   }
-  return;
+  return false;
 }
 
 void gameover()
@@ -916,14 +937,16 @@ void gameover()
      }
      delay(60);
   }
-  while(true){
-  }
 }
 
 void newBlock()
 {
   Serial.println("newBlock()");
-  check_gameover();
+  if(check_gameover()){
+    is_gameover = 1;
+    delays = millis() + 10000;
+    return;
+  }
   
   
   blocktype = random(7);
