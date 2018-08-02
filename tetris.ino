@@ -30,8 +30,8 @@ Comment:
 */
 
 
-#define TETRIS_WIDTH  (8)
-#define TETRIS_HEIGHT (16)
+#define TETRIS_WIDTH  (7)
+#define TETRIS_HEIGHT (30)
 
 unsigned char latchPin = 3;
 unsigned char clockPin = 2;
@@ -54,6 +54,8 @@ boolean  pile[TETRIS_WIDTH][TETRIS_HEIGHT];
 boolean disp[TETRIS_WIDTH][TETRIS_HEIGHT];
 
 boolean lib[10][5][7];
+
+uint8_t updated = 0;
 
 
 void tetris_setup() {
@@ -231,7 +233,7 @@ void tetris_loop() {
    
 
    //buttun actions
-  int button = 0; //readBut();
+  int button = readBut();
   
   if (button == 1) //up=rotate
     rotate();
@@ -299,30 +301,40 @@ boolean moveright()
 
 int readBut()
 {
-  if (bdelay > millis())
-  {
+  if (Serial.available() == 0) {
     return 0;
   }
-  if (analogRead(A4) > 500)
+  
+  if (bdelay > millis())
+  {
+    while(Serial.available()){
+      Serial.read();
+    }
+    return 0;
+  }
+
+  int c = Serial.read();
+  
+  if (c == 'a')
   {
     //left
     bdelay = millis() + btsidedelay;    
     return 3;
   }
   
-  if (analogRead(A5) > 500)
+  if (c == 's')
   {
     //down
     bdelay = millis() + btdowndelay;    
     return 4;
   }    
-  if (analogRead(A6) > 500)
+  if (c == 'd')
   {
     //right
     bdelay = millis() + btsidedelay;
     return 2;
   }  
-  if (analogRead(A7) > 500)
+  if (c == 'w')
   {
     //up
     bdelay = millis() + buttondelay;
@@ -343,6 +355,7 @@ void updateLED()
       disp[i][j] = block[i][j] | pile[i][j];
     }
   }
+  updated = 1;
 }
 
 void rotate()
@@ -1134,18 +1147,20 @@ boolean space_right2()
 
 void RefreshDisplay()
 {    
+
+    if(updated == 0) return;
+    updated = 0;
     int i;
     int k;
-    updateLED();
     for (k=0;k<TETRIS_HEIGHT;k++)
     {
-      for(i=1;i<TETRIS_WIDTH;i++)
+      for(i=0;i<=TETRIS_WIDTH;i++)
       {
       
         if(disp[i][k]){
-          flipdot.drawPixel(i, k, FLIPDOT_YELLOW);
+          flipdot.drawPixel(k, 6-i, FLIPDOT_YELLOW);
         }else{
-          flipdot.drawPixel(i, k, FLIPDOT_BLACK);
+          flipdot.drawPixel(k, 6-i, FLIPDOT_BLACK);
         }
       } 
     }
