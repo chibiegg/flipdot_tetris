@@ -17,6 +17,7 @@ long bdelay = 0;
 short buttondelay = 150;
 short btdowndelay = 30;
 short btsidedelay = 80;
+unsigned char nextblocktype;
 unsigned char blocktype;
 unsigned char blockrotation;
 
@@ -201,7 +202,13 @@ void tetris_start() {
   memset(block, 0, sizeof(block));
   memset(pile, 0, sizeof(pile));
   memset(disp, 0, sizeof(disp));
-  blocktype = random(7);
+  nextblocktype = random(7);
+  
+  flipdot.fillScreen(FLIPDOT_BLACK);
+  flipdot.display();
+  flipdot.fillScreen(FLIPDOT_BLACK);
+  flipdot.display();
+  
   newBlock();
   RefreshDisplay();
   delays = millis() + delay_;
@@ -219,7 +226,19 @@ void tetris_loop() {
     return;
   }
 
-  if (delays < millis() && !paused)
+  if (button == 10) // pause=togglepause
+    togglepause();
+  if (button == 11){
+    // reset
+    tetris_start();
+    return;
+  }
+    
+  if (paused){
+    return;
+  }
+  
+  if (delays < millis())
    {
      delays = millis() + delay_;
      movedown();
@@ -233,8 +252,6 @@ void tetris_loop() {
     moveleft();
   if (button == 4) //down=movedown
     movedown();
-  if (button == 10) // pause=togglepause
-    togglepause();
 }
 
 void togglepause()
@@ -347,6 +364,11 @@ int readBut()
     return 10;
   }
 
+  if (c == 'r')
+  {
+    //reset
+    return 11;
+  }
   return 0;
 }
 
@@ -912,10 +934,6 @@ void gameover()
   }
 }
 
-void copyBlock(uint8_t type, boolean  dest[TETRIS_WIDTH][TETRIS_HEIGHT+2]){
-
-}
-
 void newBlock()
 {
   Serial.println("newBlock()");
@@ -925,6 +943,7 @@ void newBlock()
     return;
   }
 
+  blocktype = nextblocktype;
   for(uint8_t x=0; x<3; x++){
     for(uint8_t y=0; y<4; y++){
       block[x+2][y] = blockpatterns[blocktype][y][x];
@@ -934,7 +953,7 @@ void newBlock()
   blockrotation = 0;
 
   // Update next blocktype
-  blocktype = random(7);
+  nextblocktype = random(7);
 }
 
 boolean space_below()
@@ -1114,6 +1133,19 @@ void RefreshDisplay()
         }
       }
     }
+
+    // nextblock
+    for(uint8_t x=0; x<3; x++){
+      for(uint8_t y=0;y<4;y++){
+        if(blockpatterns[nextblocktype][y][x]){
+          flipdot.drawPixel(x + 1, y + 23, FLIPDOT_YELLOW);
+        }else{
+          flipdot.drawPixel(x + 1, y + 23, FLIPDOT_BLACK);
+        }
+      }
+    }
+
+    
     flipdot.display();
 
 }

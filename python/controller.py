@@ -60,6 +60,9 @@ def main():
                 if e.button == 0:
                     print("p")
                     serial.write('p'.encode("ascii"))
+                if e.button == 3:
+                    print("r")
+                    serial.write('r'.encode("ascii"))
 
             elif e.type == pygame.locals.JOYBUTTONUP: # 11
                 print(str(e.button)+'番目のボタンが離された')

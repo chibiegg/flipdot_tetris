@@ -5,14 +5,23 @@
 #define DATA  23//DS
 #define LATCH 19//ST_CP
 
-FlipDot_5x7 flipdot(2, 3, false);
-
-const char* text = "Hello, World!!";
+FlipDot_5x7 flipdot(2, 5, false);
 
 void setup() {
   Serial.begin(19200);
+  Serial.println("Reset");
+  flipdot.setPulseWidth(500);
   flipdot.begin(DATA, CLOCK, LATCH);
   flipdot.setTextColor(FLIPDOT_YELLOW, FLIPDOT_BLACK);
+
+  
+  flipdot.fillScreen(FLIPDOT_YELLOW);
+  flipdot.display();
+  delay(500);
+  flipdot.fillScreen(FLIPDOT_BLACK);
+  flipdot.display();
+  delay(500);
+  
   tetris_setup();
 }
 
