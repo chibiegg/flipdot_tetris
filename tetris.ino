@@ -1,43 +1,15 @@
 /*
-Author: Jae Yeong Bae
-        UBC ECE
-        jocker.tistory.com       
-Date:   Jan.18.2013
-File:   Tetris v2
-Changelog:
-        v2: displays score at gameover
-        
-Purpose:
-        killing time.. + for fun
-          
-Circuits+Pins:
-        Led Matrix:
-        2 74HC575 Shift Registers in order: Green,Blue,Red
-        pins: Latch = 3
-              Clock = 2
-              Data = 4
-              Row Anodes = 5 to 13 (8pins) shared between both matrix
-        buttons (as digital):
-          A4 = left
-          A5 = down
-          A6 = right
-          A7 = up (rotate)
+Original Author: Jae Yeong Bae
+                 UBC ECE
+                 jocker.tistory.com
 
-Comment:
-        This is my second Arduino Project. 
-        Code may be messy and inefficient.
-        References from Arduino Library and datasheets.
+Porting        : Yota EGUSA (chibiegg)
 */
 
+#include "tetris.h"
 
 #define TETRIS_WIDTH  (10)
 #define TETRIS_HEIGHT (21)
-
-unsigned char latchPin = 3;
-unsigned char clockPin = 2;
-unsigned char dataPin = 4;
-unsigned char rowPin = 5;
-
 
 long delays = 0;
 short delay_ = 500;
@@ -51,7 +23,7 @@ unsigned char blockrotation;
 int lines = 0;
 boolean  block[TETRIS_WIDTH][TETRIS_HEIGHT+2]; //2 extra for rotation
 boolean  pile[TETRIS_WIDTH][TETRIS_HEIGHT];
-boolean disp[TETRIS_WIDTH][TETRIS_HEIGHT];
+boolean  disp[TETRIS_WIDTH][TETRIS_HEIGHT];
 
 boolean lib[10][5][7];
 
@@ -209,7 +181,7 @@ lib[9][3][5] = 1;
 lib[9][1][6] = 1;
 lib[9][2][6] = 1;
 
-  int seed = 
+  int seed =
   (analogRead(0)+1)*
   (analogRead(1)+1)*
   (analogRead(2)+1)*
@@ -217,9 +189,9 @@ lib[9][2][6] = 1;
   randomSeed(seed);
   random(10,9610806);
   seed = seed *random(3336,15679912)+analogRead(random(4)) ;
-  randomSeed(seed);  
+  randomSeed(seed);
   random(10,98046);
-  
+
   tetris_start();
 }
 
@@ -229,6 +201,7 @@ void tetris_start() {
   memset(block, 0, sizeof(block));
   memset(pile, 0, sizeof(pile));
   memset(disp, 0, sizeof(disp));
+  blocktype = random(7);
   newBlock();
   RefreshDisplay();
   delays = millis() + delay_;
@@ -251,11 +224,11 @@ void tetris_loop() {
      delays = millis() + delay_;
      movedown();
    }
-   
+
   if (button == 1) //up=rotate
     rotate();
   if (button == 2) //right=moveright
-    moveright();    
+    moveright();
   if (button == 3) //left=moveleft
     moveleft();
   if (button == 4) //down=movedown
@@ -270,7 +243,7 @@ void togglepause()
 }
 
 boolean moveleft()
-{  
+{
   Serial.println("moveleft()");
   if (space_left())
   {
@@ -278,16 +251,16 @@ boolean moveleft()
     int j;
     for (i=0;i<(TETRIS_WIDTH-1);i++)
     {
-      for (j=0;j<TETRIS_HEIGHT;j++)      
+      for (j=0;j<TETRIS_HEIGHT;j++)
       {
         block[i][j]=block[i+1][j];
       }
     }
-    
-    for (j=0;j<TETRIS_HEIGHT;j++)      
+
+    for (j=0;j<TETRIS_HEIGHT;j++)
     {
       block[TETRIS_WIDTH-1][j]=0;
-    }    
+    }
 
     updateLED();
     RefreshDisplay();
@@ -306,21 +279,21 @@ boolean moveright()
     int j;
     for (i=(TETRIS_WIDTH-1);i>0;i--)
     {
-      for (j=0;j<TETRIS_HEIGHT;j++)      
+      for (j=0;j<TETRIS_HEIGHT;j++)
       {
         block[i][j]=block[i-1][j];
       }
     }
 
-    for (j=0;j<TETRIS_HEIGHT;j++)      
+    for (j=0;j<TETRIS_HEIGHT;j++)
     {
       block[0][j]=0;
-    }    
-    
-   updateLED(); 
+    }
+
+   updateLED();
    RefreshDisplay();
-   return 1;   
-  
+   return 1;
+
   }
   return 0;
 }
@@ -330,7 +303,7 @@ int readBut()
   if (Serial.available() == 0) {
     return 0;
   }
-  
+
   if (bdelay > millis())
   {
     while(Serial.available()){
@@ -340,32 +313,32 @@ int readBut()
   }
 
   int c = Serial.read();
-  
+
   if (c == 'a')
   {
     //left
-    bdelay = millis() + btsidedelay;    
+    bdelay = millis() + btsidedelay;
     return 3;
   }
-  
+
   if (c == 's')
   {
     //down
-    bdelay = millis() + btdowndelay;    
+    bdelay = millis() + btdowndelay;
     return 4;
-  }    
+  }
   if (c == 'd')
   {
     //right
     bdelay = millis() + btsidedelay;
     return 2;
-  }  
+  }
   if (c == 'w')
   {
     //up
     bdelay = millis() + buttondelay;
     return 1;
-  }  
+  }
 
   if (c == 'p')
   {
@@ -373,14 +346,14 @@ int readBut()
     bdelay = millis() + buttondelay;
     return 10;
   }
-  
+
   return 0;
 }
 
 void updateLED()
 {
   int i;
-  int j;  
+  int j;
   for (i=0;i<TETRIS_WIDTH;i++)
   {
     for (j=0;j<TETRIS_HEIGHT;j++)
@@ -396,7 +369,7 @@ void rotate()
   Serial.println("rotate()");
   //skip for square block(3)
   if (blocktype == 3) return;
-  
+
   int xi;
   int yi;
   int i;
@@ -412,7 +385,7 @@ void rotate()
       }
     }
   }
-  
+
   //detect up
   for (i=TETRIS_HEIGHT-1;i>=0;i--)
   {
@@ -423,14 +396,14 @@ void rotate()
         yi = i;
       }
     }
-  }  
-    
+  }
+
   if (blocktype == 0)
   {
-    if (blockrotation == 0) 
+    if (blockrotation == 0)
     {
-      
-      
+
+
       if (!space_left())
       {
         if (space_right3())
@@ -440,7 +413,7 @@ void rotate()
           xi++;
         }
         else return;
-      }     
+      }
       else if (!space_right())
       {
         if (space_left3())
@@ -448,9 +421,9 @@ void rotate()
           if (!moveleft())
             return;
           if (!moveleft())
-            return;          
+            return;
           xi--;
-          xi--;        
+          xi--;
         }
         else
           return;
@@ -460,24 +433,24 @@ void rotate()
         if (space_left2())
         {
           if (!moveleft())
-            return;          
-          xi--;      
+            return;
+          xi--;
         }
         else
           return;
-      }   
-   
-      
-   
-      
-      
+      }
+
+
+
+
+
       block[xi][yi]=0;
       block[xi][yi+2]=0;
-      block[xi][yi+3]=0;      
-      
+      block[xi][yi+3]=0;
+
       block[xi-1][yi+1]=1;
       block[xi+1][yi+1]=1;
-      block[xi+2][yi+1]=1;      
+      block[xi+2][yi+1]=1;
 
       blockrotation = 1;
     }
@@ -486,19 +459,19 @@ void rotate()
       block[xi][yi]=0;
       block[xi+2][yi]=0;
       block[xi+3][yi]=0;
-      
+
       block[xi+1][yi-1]=1;
       block[xi+1][yi+1]=1;
       block[xi+1][yi+2]=1;
 
       blockrotation = 0;
-    }    
+    }
   }
-  
+
   //offset to mid
-  xi ++;  
-  yi ++;  
-  
+  xi ++;
+  yi ++;
+
   if (blocktype == 1)
   {
     if (blockrotation == 0)
@@ -509,8 +482,8 @@ void rotate()
 
       block[xi][yi-1] = 1;
       block[xi+1][yi-1] = 1;
-      block[xi][yi+1] = 1;      
-      
+      block[xi][yi+1] = 1;
+
       blockrotation = 1;
     }
     else if (blockrotation == 1)
@@ -520,32 +493,32 @@ void rotate()
         if (!moveright())
           return;
         xi++;
-      }        
+      }
       xi--;
-      
+
       block[xi][yi-1] = 0;
       block[xi+1][yi-1] = 0;
-      block[xi][yi+1] = 0;      
-      
+      block[xi][yi+1] = 0;
+
       block[xi-1][yi] = 1;
       block[xi+1][yi] = 1;
-      block[xi+1][yi+1] = 1;      
-      
-      blockrotation = 2;      
+      block[xi+1][yi+1] = 1;
+
+      blockrotation = 2;
     }
     else if (blockrotation == 2)
     {
       yi --;
-      
+
       block[xi-1][yi] = 0;
       block[xi+1][yi] = 0;
-      block[xi+1][yi+1] = 0;      
-      
+      block[xi+1][yi+1] = 0;
+
       block[xi][yi-1] = 1;
       block[xi][yi+1] = 1;
-      block[xi-1][yi+1] = 1;      
-      
-      blockrotation = 3;            
+      block[xi-1][yi+1] = 1;
+
+      blockrotation = 3;
     }
     else
     {
@@ -557,14 +530,14 @@ void rotate()
       }
       block[xi][yi-1] = 0;
       block[xi][yi+1] = 0;
-      block[xi-1][yi+1] = 0;        
+      block[xi-1][yi+1] = 0;
 
       block[xi-1][yi-1] = 1;
       block[xi-1][yi] = 1;
       block[xi+1][yi] = 1;
-      
-      blockrotation = 0;          
-    }  
+
+      blockrotation = 0;
+    }
   }
 
 
@@ -579,8 +552,8 @@ void rotate()
 
       block[xi][yi-1] = 1;
       block[xi+1][yi+1] = 1;
-      block[xi][yi+1] = 1;      
-      
+      block[xi][yi+1] = 1;
+
       blockrotation = 1;
     }
     else if (blockrotation == 1)
@@ -590,32 +563,32 @@ void rotate()
         if (!moveright())
           return;
         xi++;
-      }              
+      }
       xi--;
-      
+
       block[xi][yi-1] = 0;
       block[xi+1][yi+1] = 0;
-      block[xi][yi+1] = 0;      
-      
+      block[xi][yi+1] = 0;
+
       block[xi-1][yi] = 1;
       block[xi+1][yi] = 1;
-      block[xi-1][yi+1] = 1;      
-      
-      blockrotation = 2;      
+      block[xi-1][yi+1] = 1;
+
+      blockrotation = 2;
     }
     else if (blockrotation == 2)
     {
       yi --;
-      
+
       block[xi-1][yi] = 0;
       block[xi+1][yi] = 0;
-      block[xi-1][yi+1] = 0;      
-      
+      block[xi-1][yi+1] = 0;
+
       block[xi][yi-1] = 1;
       block[xi][yi+1] = 1;
-      block[xi-1][yi-1] = 1;      
-      
-      blockrotation = 3;            
+      block[xi-1][yi-1] = 1;
+
+      blockrotation = 3;
     }
     else
     {
@@ -624,19 +597,19 @@ void rotate()
         if (!moveleft())
           return;
         xi--;
-      }      
+      }
       block[xi][yi-1] = 0;
       block[xi][yi+1] = 0;
-      block[xi-1][yi-1] = 0;        
+      block[xi-1][yi-1] = 0;
 
       block[xi+1][yi-1] = 1;
       block[xi-1][yi] = 1;
       block[xi+1][yi] = 1;
-      
-      blockrotation = 0;          
-    }  
+
+      blockrotation = 0;
+    }
   }
-  
+
   if (blocktype == 4)
   {
     if (blockrotation == 0)
@@ -645,8 +618,8 @@ void rotate()
       block[xi-1][yi] = 0;
 
       block[xi+1][yi] = 1;
-      block[xi+1][yi+1] = 1;      
-      
+      block[xi+1][yi+1] = 1;
+
       blockrotation = 1;
     }
     else
@@ -656,18 +629,18 @@ void rotate()
         if (!moveright())
           return;
         xi++;
-      }              
+      }
       xi--;
-      
+
       block[xi+1][yi] = 0;
-      block[xi+1][yi+1] = 0;      
-      
+      block[xi+1][yi+1] = 0;
+
       block[xi-1][yi] = 1;
       block[xi+1][yi-1] = 1;
-      
-      blockrotation = 0;          
-    }  
-  }  
+
+      blockrotation = 0;
+    }
+  }
 
 
   if (blocktype == 5)
@@ -680,8 +653,8 @@ void rotate()
 
       block[xi][yi-1] = 1;
       block[xi+1][yi] = 1;
-      block[xi][yi+1] = 1;      
-      
+      block[xi][yi+1] = 1;
+
       blockrotation = 1;
     }
     else if (blockrotation == 1)
@@ -691,32 +664,32 @@ void rotate()
         if (!moveright())
           return;
         xi++;
-      }              
+      }
       xi--;
-      
+
       block[xi][yi-1] = 0;
       block[xi+1][yi] = 0;
       block[xi][yi+1] = 0;
-      
+
       block[xi-1][yi] = 1;
       block[xi+1][yi] = 1;
       block[xi][yi+1] = 1;
-      
-      blockrotation = 2;      
+
+      blockrotation = 2;
     }
     else if (blockrotation == 2)
     {
       yi --;
-      
+
       block[xi-1][yi] = 0;
       block[xi+1][yi] = 0;
-      block[xi][yi+1] = 0;     
-      
+      block[xi][yi+1] = 0;
+
       block[xi][yi-1] = 1;
       block[xi-1][yi] = 1;
-      block[xi][yi+1] = 1;      
-      
-      blockrotation = 3;            
+      block[xi][yi+1] = 1;
+
+      blockrotation = 3;
     }
     else
     {
@@ -725,19 +698,19 @@ void rotate()
         if (!moveleft())
           return;
         xi--;
-      }      
+      }
       block[xi][yi-1] = 0;
       block[xi-1][yi] = 0;
-      block[xi][yi+1] = 0;      
-      
+      block[xi][yi+1] = 0;
+
       block[xi][yi-1] = 1;
       block[xi-1][yi] = 1;
       block[xi+1][yi] = 1;
-      
-      blockrotation = 0;          
-    }  
+
+      blockrotation = 0;
+    }
   }
-  
+
   if (blocktype == 6)
   {
     if (blockrotation == 0)
@@ -746,8 +719,8 @@ void rotate()
       block[xi][yi-1] = 0;
 
       block[xi+1][yi-1] = 1;
-      block[xi][yi+1] = 1;      
-      
+      block[xi][yi+1] = 1;
+
       blockrotation = 1;
     }
     else
@@ -757,19 +730,19 @@ void rotate()
         if (!moveright())
           return;
         xi++;
-      }              
+      }
       xi--;
-      
+
       block[xi+1][yi-1] = 0;
-      block[xi][yi+1] = 0;      
-      
+      block[xi][yi+1] = 0;
+
       block[xi-1][yi-1] = 1;
       block[xi][yi-1] = 1;
-      
-      blockrotation = 0;          
-    }  
-  }  
-  
+
+      blockrotation = 0;
+    }
+  }
+
   //if rotating made block and pile overlap, push rows up
   while (!check_overlap())
   {
@@ -782,8 +755,8 @@ void rotate()
     }
     delays = millis() + delay_;
   }
-  
-  
+
+
   updateLED();
   RefreshDisplay();
 }
@@ -812,7 +785,7 @@ void movedown()
   {
     //merge and new block
     int i;
-    int j;    
+    int j;
     for (i=0;i<TETRIS_WIDTH;i++)
     {
      for(j=0;j<TETRIS_HEIGHT;j++)
@@ -824,16 +797,16 @@ void movedown()
        }
      }
     }
-    newBlock();   
+    newBlock();
   }
-  updateLED();  
+  updateLED();
   RefreshDisplay();
 }
 
 boolean check_overlap()
 {
   int i;
-  int j;  
+  int j;
   for (i=0;i<TETRIS_HEIGHT;i++)
   {
     for (j=0;j<TETRIS_WIDTH-1;j++)
@@ -842,7 +815,7 @@ boolean check_overlap()
        {
          if (pile[j][i])
            return false;
-       }        
+       }
     }
   }
   for (i=TETRIS_HEIGHT;i<TETRIS_HEIGHT+2;i++)
@@ -852,9 +825,9 @@ boolean check_overlap()
        if (block[j][i])
        {
          return false;
-       }        
+       }
     }
-  }  
+  }
   return true;
 }
 
@@ -863,7 +836,7 @@ bool check_gameover()
   int i;
   int j;
   int cnt=0;;
-  
+
   for(i=TETRIS_HEIGHT-1;i>=0;i--)
   {
     cnt=0;
@@ -873,38 +846,38 @@ bool check_gameover()
       {
         cnt ++;
       }
-    }    
+    }
     if (cnt == TETRIS_WIDTH)
     {
         lines++;
       for (j=0;j<TETRIS_WIDTH;j++)
       {
         pile[j][i]=0;
-      }        
+      }
       updateLED();
       RefreshDisplay();
       delay(50);
-      
+
       int k;
       for(k=i;k>0;k--)
       {
         for (j=0;j<TETRIS_WIDTH;j++)
         {
           pile[j][k] = pile[j][k-1];
-        }                
+        }
       }
       for (j=0;j<TETRIS_WIDTH;j++)
       {
         pile[j][0] = 0;
-      }        
-      updateLED();    
-      RefreshDisplay();  
-      delay(50);      
+      }
+      updateLED();
+      RefreshDisplay();
+      delay(50);
       i++;
     }
-  }  
-  
-  
+  }
+
+
   for(i=0;i<TETRIS_WIDTH;i++)
   {
     if (pile[i][0]){
@@ -920,7 +893,7 @@ void gameover()
   Serial.println("gameover()");
   int i;
   int j;
-  
+
   //close blind
   for (i=0;i<TETRIS_WIDTH;i++)
   {
@@ -932,11 +905,15 @@ void gameover()
        }
        else
        {
-         disp[7-i][j]=1;        
+         disp[7-i][j]=1;
        }
      }
      delay(60);
   }
+}
+
+void copyBlock(uint8_t type, boolean  dest[TETRIS_WIDTH][TETRIS_HEIGHT+2]){
+
 }
 
 void newBlock()
@@ -947,90 +924,23 @@ void newBlock()
     delays = millis() + 10000;
     return;
   }
-  
-  
-  blocktype = random(7);
 
-  
-  if (blocktype == 0)
-  // 0
-  // 0
-  // 0
-  // 0
-  {
-    block[3][0]=1;
-    block[3][1]=1;
-    block[3][2]=1;
-    block[3][3]=1;      
+  for(uint8_t x=0; x<3; x++){
+    for(uint8_t y=0; y<4; y++){
+      block[x+2][y] = blockpatterns[blocktype][y][x];
+    }
   }
-
-  if (blocktype == 1)
-  // 0
-  // 0 0 0
-  {
-    block[2][0]=1;
-    block[2][1]=1;
-    block[3][1]=1;
-    block[4][1]=1;        
-  }
-  
-  if (blocktype == 2)
-  //     0
-  // 0 0 0
-  {
-    block[4][0]=1;
-    block[2][1]=1;
-    block[3][1]=1;
-    block[4][1]=1;         
-  }
-
-  if (blocktype == 3)
-  // 0 0
-  // 0 0
-  {
-    block[3][0]=1;
-    block[3][1]=1;
-    block[4][0]=1;
-    block[4][1]=1;          
-  }    
-
-  if (blocktype == 4)
-  //   0 0
-  // 0 0
-  {
-    block[4][0]=1;
-    block[5][0]=1;
-    block[3][1]=1;
-    block[4][1]=1;         
-  }    
-  
-  if (blocktype == 5)
-  //   0
-  // 0 0 0
-  {
-    block[4][0]=1;
-    block[3][1]=1;
-    block[4][1]=1;
-    block[5][1]=1;       
-  }        
-
-  if (blocktype == 6)
-  // 0 0
-  //   0 0
-  {
-    block[3][0]=1;
-    block[4][0]=1;
-    block[4][1]=1;
-    block[5][1]=1;         
-  }    
 
   blockrotation = 0;
+
+  // Update next blocktype
+  blocktype = random(7);
 }
 
 boolean space_below()
-{ 
+{
   int i;
-  int j;  
+  int j;
   for (i=TETRIS_HEIGHT-1;i>=0;i--)
   {
     for (j=0;j<TETRIS_WIDTH;j++)
@@ -1042,17 +952,17 @@ boolean space_below()
          if (pile[j][i+1])
          {
            return false;
-         }      
-       }        
+         }
+       }
     }
   }
   return true;
 }
 
 boolean space_left2()
-{ 
+{
   int i;
-  int j;  
+  int j;
   for (i=TETRIS_HEIGHT-1;i>=0;i--)
   {
     for (j=0;j<TETRIS_WIDTH;j++)
@@ -1064,17 +974,17 @@ boolean space_left2()
          if (pile[j-1][i] | pile[j-2][i])
          {
            return false;
-         }      
-       }        
+         }
+       }
     }
   }
   return true;
 }
 
 boolean space_left3()
-{ 
+{
   int i;
-  int j;  
+  int j;
   for (i=TETRIS_HEIGHT-1;i>=0;i--)
   {
     for (j=0;j<TETRIS_WIDTH;j++)
@@ -1086,17 +996,17 @@ boolean space_left3()
          if (pile[j-1][i] | pile[j-2][i]|pile[j-3][i])
          {
            return false;
-         }      
-       }        
+         }
+       }
     }
   }
   return true;
 }
 
 boolean space_left()
-{ 
+{
   int i;
-  int j;  
+  int j;
   for (i=TETRIS_HEIGHT-1;i>=0;i--)
   {
     for (j=0;j<TETRIS_WIDTH;j++)
@@ -1108,17 +1018,17 @@ boolean space_left()
          if (pile[j-1][i])
          {
            return false;
-         }      
-       }        
+         }
+       }
     }
   }
   return true;
 }
 
 boolean space_right()
-{ 
+{
   int i;
-  int j;  
+  int j;
   for (i=TETRIS_HEIGHT;i>=0;i--)
   {
     for (j=0;j<TETRIS_WIDTH;j++)
@@ -1130,17 +1040,17 @@ boolean space_right()
          if (pile[j+1][i])
          {
            return false;
-         }      
-       }        
+         }
+       }
     }
   }
   return true;
 }
 
 boolean space_right3()
-{ 
+{
   int i;
-  int j;  
+  int j;
   for (i=TETRIS_HEIGHT-1;i>=0;i--)
   {
     for (j=0;j<TETRIS_WIDTH;j++)
@@ -1152,17 +1062,17 @@ boolean space_right3()
          if (pile[j+1][i] |pile[j+2][i] | pile[j+3][i])
          {
            return false;
-         }      
-       }        
+         }
+       }
     }
   }
   return true;
 }
 
 boolean space_right2()
-{ 
+{
   int i;
-  int j;  
+  int j;
   for (i=TETRIS_HEIGHT-1;i>=0;i--)
   {
     for (j=0;j<TETRIS_WIDTH;j++)
@@ -1174,8 +1084,8 @@ boolean space_right2()
          if (pile[j+1][i] |pile[j+2][i])
          {
            return false;
-         }      
-       }        
+         }
+       }
     }
   }
   return true;
@@ -1184,7 +1094,7 @@ boolean space_right2()
 
 
 void RefreshDisplay()
-{    
+{
 
     if(updated == 0) return;
     updated = 0;
@@ -1194,7 +1104,7 @@ void RefreshDisplay()
     {
       for(i=0;i<TETRIS_WIDTH;i++)
       {
-      
+
         if(disp[i][k]){
           // flipdot.drawPixel(k, 6-i, FLIPDOT_YELLOW);
           flipdot.drawPixel(i, k, FLIPDOT_YELLOW);
@@ -1202,14 +1112,8 @@ void RefreshDisplay()
           // flipdot.drawPixel(k, 6-i, FLIPDOT_BLACK);
           flipdot.drawPixel(i, k, FLIPDOT_BLACK);
         }
-      } 
+      }
     }
     flipdot.display();
-    
+
 }
-
-
-
-
-
-
